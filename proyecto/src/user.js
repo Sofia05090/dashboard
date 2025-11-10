@@ -18,12 +18,14 @@ export async function mostrarUser() {
 `;
     const form = document.getElementById("user-form");
     const mensaje = document.getElementById("mensaje");
+    
     // Obtener usuario actual
     const {
         data: { user },
         error: userError,
     } = await supabase.auth.getUser();
     const correo = user.email;
+   
     // Obtener datos del estudiante
     const { data, error } = await supabase
         .from("estudiantes")
@@ -37,6 +39,7 @@ export async function mostrarUser() {
     document.getElementById("nombre").value = data.nombre || "";
     document.getElementById("correo").value = data.correo || "";
     document.getElementById("telefono").value = data.telefono || "";
+   
     // Actualizar datos 
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
