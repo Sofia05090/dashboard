@@ -3,7 +3,7 @@ import { supabase } from './supabase.js';
 // ID del usuario logueado (Se usa para publicar y para la sección "Siguiendo")
 let currentUserId = null; 
 
-export function mostrarFeed() {
+export function mostrarMVP() {
     const app = document.getElementById('app');
     app.innerHTML = ` 
     <section> 
