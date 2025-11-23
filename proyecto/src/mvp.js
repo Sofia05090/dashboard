@@ -1,127 +1,183 @@
 import { supabase } from './supabase.js';
-export function mostrarMVP() {
+
+// ID del usuario logueado (Se usa para publicar y para la sección "Siguiendo")
+let currentUserId = null; 
+
+export function mostrarFeed() {
     const app = document.getElementById('app');
     app.innerHTML = ` 
-<section> 
-<h2>Subir Actividad (MVP)</h2> 
-<form id="actividad-form"> 
-<input type="text" name="titulo" placeholder="Título" required 
-/> 
-<textarea name="descripcion" 
-placeholder="Descripción"></textarea> 
-<select name="tipo"> 
-<option value="tarea">Tarea</option> 
-<option value="examen">Examen</option> 
-<option value="proyecto">Proyecto</option> 
-<option value="participacion">Participación</option> 
-<option value="otro">Otro</option> 
-</select> 
-<select name="curso" required id="select-curso"> 
-<option value="">Cargando cursos...</option> 
-</select> 
-<input type="text" name="imagen" placeholder="URL de imagen 
-(opcional)" /> 
-<button type="submit">Subir Actividad</button> 
-</form> 
-<p id="mensaje" style="text-align:center;"></p> 
-<h3>Mis Actividades</h3> 
-<div id="lista-actividades"></div> 
-</section> 
-`;
-    const form = document.getElementById('actividad-form');
+    <section> 
+        <h2>¿Qué está pasando?</h2> 
+        
+        <form id="estado-form"> 
+            <textarea name="mensaje" placeholder="¿Qué estás haciendo? (Máx. 280 caracteres)" rows="3" required></textarea> 
+            <button type="submit">Publicar</button> 
+        </form> 
+
+        <p id="mensaje" style="text-align:center; margin-top: 10px;"></p> 
+        
+        <div style="margin: 20px 0; border-bottom: 1px solid #ccc;">
+            <button id="tab-para-ti" class="feed-tab active" style="margin-right: 15px;">Para ti</button>
+            <button id="tab-siguiendo" class="feed-tab">Siguiendo</button>
+        </div>
+
+        <h3>Feed</h3> 
+        <div id="lista-estados">Cargando...</div> 
+    </section> 
+    `;
+
+    const form = document.getElementById('estado-form');
     const mensaje = document.getElementById('mensaje');
-    const lista = document.getElementById('lista-actividades');
-    const selectCurso = document.getElementById('select-curso');
-    // Cargar cursos 
-    async function cargarCursos() {
-        const { data, error } = await supabase
-            .from('cursos')
-            .select('id, nombre')
-            .order('nombre', { ascending: true });
-        if (error) {
-            selectCurso.innerHTML = `<option>Error al cargar cursos</option>`;
-            return;
-        }
-        selectCurso.innerHTML = `<option value="">Selecciona un 
-curso</option>`;
-        data.forEach(curso => {
-            const opt = document.createElement('option');
-            opt.value = curso.id;
-            opt.textContent = curso.nombre;
-            selectCurso.appendChild(opt);
-        });
-    }
-    //Cargar actividades del usuario 
-    async function cargarActividades() {
-        lista.innerHTML = 'Cargando actividades...';
+    const lista = document.getElementById('lista-estados');
+    // Referencias a los nuevos IDs en español
+    const tabParaTi = document.getElementById('tab-para-ti');
+    const tabSiguiendo = document.getElementById('tab-siguiendo');
+
+    // Inicializar el ID del usuario y cargar el feed
+    async function initializeUserAndFeed() {
         const { data: userData } = await supabase.auth.getUser();
         const user = userData.user;
+
         if (!user) {
-            mensaje.textContent = '⚠ Debes iniciar sesión para ver tus actividades.';
+            mensaje.textContent = '⚠ Debes iniciar sesión para publicar y ver el feed.';
             lista.innerHTML = '';
+            form.style.display = 'none'; // Ocultar el formulario
             return;
         }
-        const { data, error } = await supabase
-            .from('actividades')
-            .select('id, titulo, descripcion, tipo, imagen')
-            .eq('estudiante_id', user.id)
-            .order('id', { ascending: false });
+
+        currentUserId = user.id; // Guardamos el ID del usuario logueado
+        form.style.display = 'block'; // Mostrar el formulario si está logueado
+        
+        // Cargar la vista por defecto ("Para ti")
+        cargarFeed('para_ti'); 
+    }
+
+    // Cargar Feed (Unificado para Para ti y Siguiendo)
+    // Se usa 'para_ti' o 'siguiendo' como parámetro de vista
+    async function cargarFeed(view = 'para_ti') {
+        lista.innerHTML = 'Cargando estados...';
+
+        if (!currentUserId) {
+             // Si el ID del usuario no está disponible, cargamos solo la vista universal
+             view = 'para_ti';
+        }
+
+        let query = supabase
+            .from('estados')
+            // Hacemos JOIN con la tabla usuarios para mostrar el handle
+            .select(`
+                id,
+                mensaje,
+                creado_en,
+                usuarios(handle, nombre) 
+            `)
+            .order('creado_en', { ascending: false });
+        
+        // Lógica de filtrado para la sección "Siguiendo"
+        if (view === 'siguiendo' && currentUserId) {
+            
+            // 1. Obtener los IDs de los usuarios que sigo
+            const { data: seguidos, error: followError } = await supabase
+                .from('seguimientos')
+                .select('seguido_id')
+                .eq('seguidor_id', currentUserId);
+
+            if (followError) {
+                lista.innerHTML = 'Error al cargar seguidos.';
+                console.error(followError);
+                return;
+            }
+            
+            const followedIds = seguidos.map(f => f.seguido_id);
+            
+            if (followedIds.length === 0) {
+                lista.innerHTML = '<p>No sigues a nadie. ¡Ve al feed "Para ti" para encontrar usuarios!</p>';
+                return;
+            }
+
+            query = query.in('usuario_id', followedIds);
+        }
+
+        const { data, error } = await query.limit(20); 
+
         if (error) {
-            lista.innerHTML = 'Error al cargar actividades.';
+            lista.innerHTML = `Error al cargar feed: ${error.message}`;
             return;
         }
-        if (!data.length) {
-            lista.innerHTML = '<p>No has subido actividades aún.</p>';
+
+        renderFeedList(data);
+    }
+
+    // Función para renderizar el HTML del feed (sin cambios)
+    function renderFeedList(data) {
+        if (!data || data.length === 0) {
+            lista.innerHTML = '<p>No hay estados que mostrar.</p>';
             return;
         }
+
         lista.innerHTML = '';
-        data.forEach(act => {
+        data.forEach(estado => {
+            const userHandle = estado.usuarios ? estado.usuarios.handle : '@Desconocido';
+            
             const div = document.createElement('div');
+            div.className = 'estado-post';
+            div.style.marginBottom = '15px';
+            div.style.border = '1px solid #eee';
+            div.style.padding = '10px';
+
             div.innerHTML = ` 
-<hr> 
-<h4>${act.titulo}</h4> 
-<p>${act.descripcion || ''}</p> 
-<p><b>Tipo:</b> ${act.tipo.toUpperCase()}</p> 
-${act.imagen ? `<img src="${act.imagen}" alt="${act.titulo}" 
-width="200">` : ''} `;
+                <div style="font-weight: bold;">${userHandle}</div>
+                <p style="margin: 5px 0;">${estado.mensaje}</p> 
+                <small style="color: #666;">${new Date(estado.creado_en).toLocaleString()}</small>
+            `;
             lista.appendChild(div);
         });
     }
-    // Subir nueva actividad 
+
+    // Subir nuevo estado (Tweet)
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         mensaje.textContent = '';
-        const { data: userData } = await supabase.auth.getUser();
-        const user = userData.user;
-        if (!user) {
-            mensaje.textContent = '⚠ Debes iniciar sesión.';
+        
+        if (!currentUserId) {
+            mensaje.textContent = '⚠ Debes iniciar sesión para publicar.';
             return;
         }
-        const titulo = form.titulo.value.trim();
-        const descripcion = form.descripcion.value.trim();
-        const tipo = form.tipo.value;
-        const curso_id = form.curso.value;
-        const imagen = form.imagen.value.trim();
-        const { error } = await supabase.from('actividades').insert([
+        
+        const mensajeTexto = form.mensaje.value.trim();
+
+        const { error } = await supabase.from('estados').insert([
             {
-                titulo,
-                descripcion,
-                tipo,
-                imagen,
-                curso_id,
-                estudiante_id: user.id,
+                mensaje: mensajeTexto,
+                usuario_id: currentUserId, // Usamos el ID del usuario logueado
             },
         ]);
+        
         if (error) {
-            mensaje.textContent = '❌Error al subir actividad: ' +
-                error.message;
+            mensaje.textContent = '❌Error al publicar: ' + error.message;
         } else {
-            mensaje.textContent = '✅Actividad subida correctamente';
+            mensaje.textContent = '✅Estado publicado correctamente';
             form.reset();
-            cargarActividades();
+            // Recargar la vista actual después de publicar
+            const activeTabId = document.querySelector('.feed-tab.active').id;
+            // Mapeamos el ID de la pestaña a la vista interna
+            const viewToLoad = activeTabId === 'tab-para-ti' ? 'para_ti' : 'siguiendo';
+            cargarFeed(viewToLoad);
         }
     });
-    // Inicialización 
-    cargarCursos();
-    cargarActividades();
-} 
+
+    // Eventos de Pestañas (Actualizados)
+    tabParaTi.addEventListener('click', () => {
+        tabSiguiendo.classList.remove('active');
+        tabParaTi.classList.add('active');
+        cargarFeed('para_ti');
+    });
+
+    tabSiguiendo.addEventListener('click', () => {
+        tabParaTi.classList.remove('active');
+        tabSiguiendo.classList.add('active');
+        cargarFeed('siguiendo');
+    });
+
+    initializeUserAndFeed();
+}
