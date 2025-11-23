@@ -1,4 +1,3 @@
-// ...existing code...
 import { supabase } from './supabase.js';
 import { mostrarRegistro } from './register.js';
 import { mostrarLogin } from './login.js';
@@ -6,7 +5,6 @@ import { mostrarMVP } from './mvp.js';
 import { mostrarUser } from './user.js';
 import { mostrarAdmin } from './admin.js';
 
-// Funciones de navegación disponibles para ser llamadas
 const routes = {
   'registro': mostrarRegistro,
   'login': mostrarLogin,
@@ -23,10 +21,7 @@ async function CerrarSesion() {
 
 export async function cargarMenu() {
   const menu = document.getElementById('menu');
-  if (!menu) {
-    console.warn('Elemento "#menu" no encontrado. Añade <div id="menu"></div> en tu HTML o carga el script después del DOM.');
-    return;
-  }
+  if (!menu) return;
 
   const { data } = await supabase.auth.getUser();
   const user = data?.user || null;
@@ -40,24 +35,118 @@ export async function cargarMenu() {
     `;
   } else {
     menu.innerHTML = `
-      <div>
-        <button data-action="actividades">Actividades</button>
-        <button data-action="usuarios">Usuarios</button>
-        <button data-action="logout">Cerrar sesión</button>
-        ${user.email === 'admin@mail.com' ? '<button data-action="admin">Admin</button>' : ''}
-      </div>
+      <nav class="bottom-menu">
+        <button class="nav-item" data-action="actividades">🏠</button>
+        <button class="nav-item" data-action="buscar">🔍</button>
+        <button class="nav-item" data-action="comunidades">🧭</button>
+        <button class="nav-item" data-action="notificaciones">🔔</button>
+        <button class="nav-item" data-action="mensajes">✉️</button>
+        ${user.email === 'admin@mail.com' ? `<button class="nav-item" data-action="admin">🛠️</button>` : ''}
+        <button class="nav-item" data-action="logout">🚪</button>
+      </nav>
+
+      <div id="viewContainer"></div>
     `;
   }
 
-  menu.querySelectorAll('button').forEach(button => {
-    const action = button.getAttribute('data-action');
-    if (!action) return;
-    if (action === 'logout') {
-      button.addEventListener('click', (e) => { e.preventDefault(); CerrarSesion(); });
-    } else if (routes[action]) {
-      button.addEventListener('click', (e) => { e.preventDefault(); routes[action](); });
+  menu.querySelectorAll("[data-action]").forEach(btn => {
+    const action = btn.dataset.action;
+
+    if (action === "logout") {
+      btn.addEventListener("click", e => {
+        e.preventDefault();
+        CerrarSesion();
+      });
+      return;
     }
+
+    if (routes[action]) {
+      btn.addEventListener("click", e => {
+        e.preventDefault();
+        routes[action]();
+      });
+      return;
+    }
+
+    btn.addEventListener("click", e => {
+      e.preventDefault();
+      cargarVista(action);
+    });
   });
+}
+
+function cargarVista(vista) {
+  const container = document.getElementById("viewContainer");
+  if (!container) return;
+
+  switch (vista) {
+    case "buscar":
+      container.innerHTML = `
+        <h2>Buscar</h2>
+        <input id="searchInput" placeholder="Buscar...">
+        <div id="searchResults"></div>
+      `;
+      iniciarBuscador();
+      break;
+
+    case "comunidades":
+      container.innerHTML = `
+        <h2>Comunidades</h2>
+        <div id="comunidadesList"></div>
+      `;
+      cargarComunidades();
+      break;
+
+    case "notificaciones":
+      container.innerHTML = `
+        <h2>Notificaciones</h2>
+        <div id="notiList"></div>
+      `;
+      cargarNotificaciones();
+      break;
+
+    case "mensajes":
+      container.innerHTML = `
+        <h2>Mensajes</h2>
+        <div id="dmList"></div>
+      `;
+      cargarDMs();
+      break;
+  }
+}
+
+function iniciarBuscador() {
+  const input = document.getElementById("searchInput");
+  const results = document.getElementById("searchResults");
+
+  input.addEventListener("input", () => {
+    const q = input.value.trim().toLowerCase();
+    results.innerHTML = q.length ? `<p>Resultados para <b>${q}</b></p>` : "";
+  });
+}
+
+function cargarComunidades() {
+  const cont = document.getElementById("comunidadesList");
+  const items = ["Programación", "Gaming", "Noticias", "Tecnología"];
+  cont.innerHTML = items.map(i => `<div class="item">${i}</div>`).join("");
+}
+
+function cargarNotificaciones() {
+  const cont = document.getElementById("notiList");
+  cont.innerHTML = `
+    <div class="item">Te dieron like</div>
+    <div class="item">Nuevo seguidor</div>
+    <div class="item">Tu tweet está creciendo</div>
+  `;
+}
+
+function cargarDMs() {
+  const cont = document.getElementById("dmList");
+  cont.innerHTML = `
+    <div class="item"><b>Juan:</b> ¿Qué tal?</div>
+    <div class="item"><b>Ana:</b> ¿Hacemos call?</div>
+    <div class="item"><b>Luis:</b> Mira esto...</div>
+  `;
 }
 
 document.addEventListener('DOMContentLoaded', cargarMenu);
