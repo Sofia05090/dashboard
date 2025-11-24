@@ -1,8 +1,8 @@
-// =================================
+// ===============================
 // MENSAJES DIRECTOS (DMs) - X/Twitter
-// =================================
+// ===============================
 
-document.addEventListener("DOMContentLoaded", () => {
+export function cargarMensajes() {
 
     const container = document.getElementById("dmList");
     if (!container) return;
@@ -19,5 +19,4 @@ document.addEventListener("DOMContentLoaded", () => {
             <p>${m.mensaje}</p>
         </div>
     `).join("");
-
-});
+}

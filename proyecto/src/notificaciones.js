@@ -2,8 +2,7 @@
 // NOTIFICACIONES - TWITTER STYLE
 // =================================
 
-document.addEventListener("DOMContentLoaded", () => {
-
+export function cargarNotificaciones() {
     const container = document.getElementById("notiList");
     if (!container) return;
 
@@ -19,5 +18,4 @@ document.addEventListener("DOMContentLoaded", () => {
             <p>${n}</p>
         </div>
     `).join("");
-
-});
+}
