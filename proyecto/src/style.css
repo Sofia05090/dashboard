@@ -1,96 +1,332 @@
+/* ========================================= */
+/* ESTILOS GLOBALES Y VARIABLES */
+/* ========================================= */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    --color-primary: #1da1f2; /* Azul de Twitter */
+    --color-dark: #1a1a1a;
+    --color-light: #fff;
+    --color-border: #ebebeb;
+    --color-text-secondary: #657786; /* Gris para handles y íconos inactivos */
+    --font-stack: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* Aplicar transiciones suaves */
+* {
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+    font-family: var(--font-stack);
+    margin: 0;
+    padding: 0;
+    background-color: #f7f9f9; /* Gris muy claro */
+    color: var(--color-dark);
 }
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+    min-height: 100vh;
+    box-sizing: border-box;
+    padding-bottom: 70px; /* Espacio para el menú inferior */
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vanilla:hover {
-  filter: drop-shadow(0 0 2em #f7df1eaa);
+section {
+    padding: 20px 15px;
 }
 
-.card {
-  padding: 2em;
+h2 {
+    font-size: 1.5em;
+    font-weight: 800; /* Extra bold */
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    color: var(--color-dark);
 }
 
-.read-the-docs {
-  color: #888;
+/* ========================================= */
+/* FORMULARIOS, INPUTS Y BOTONES */
+/* ========================================= */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: var(--color-light);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 1em;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+input:focus,
+textarea:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+textarea {
+    resize: none;
+    min-height: 80px;
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 9999px; /* Píldora */
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s;
+    font-size: 1em;
+    align-self: flex-end; /* Alinea el botón Publicar a la derecha */
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+button[type="submit"] {
+    background-color: var(--color-primary);
+    color: var(--color-light);
+    align-self: flex-end;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+    background-color: #178ae0;
+}
+
+/* ---------------------------------------------------- */
+/* ESTILOS DE AUTENTICACIÓN (CLASES REQUERIDAS) */
+/* ---------------------------------------------------- */
+.auth-button {
+    padding: 12px 20px; /* Tamaño ligeramente mayor para botones de auth */
+    border: 1px solid;
+    border-radius: 9999px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1em;
+    min-width: 150px;
+    text-align: center;
+}
+
+/* Estilo Primario (Fondo Azul) - Iniciar Sesión */
+.auth-button.primary {
+    background-color: var(--color-primary);
+    color: var(--color-light);
+    border-color: var(--color-primary);
+}
+
+.auth-button.primary:hover {
+    background-color: #178ae0;
+}
+
+/* Estilo Secundario (Fondo Blanco) - Registrarse / Crear cuenta */
+.auth-button.secondary {
+    background-color: var(--color-light);
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.auth-button.secondary:hover {
+    background-color: #eaf5ff;
+}
+/* ---------------------------------------------------- */
+
+
+.profile-action-btn {
+    background-color: var(--color-dark);
+    color: white;
+    padding: 8px 15px;
+    border: 1px solid var(--color-dark);
+    border-radius: 9999px;
+}
+
+.profile-action-btn:hover {
+    background-color: #000;
+}
+
+
+/* ========================================= */
+/* MENÚ INFERIOR (BOTTOM MENU) */
+/* ========================================= */
+#menu .auth-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background-color: var(--color-light);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.bottom-menu {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: var(--color-light);
+    border-top: 1px solid var(--color-border);
+    padding: 5px 0;
+    z-index: 100;
+}
+
+.nav-item {
+    background: none;
+    border: none;
+    font-size: 1.8em; /* Tamaño grande para los íconos */
+    padding: 10px;
+    color: var(--color-text-secondary); /* Gris de ícono inactivo */
+    cursor: pointer;
+}
+
+.nav-item:hover {
+    color: var(--color-primary);
+}
+
+/* ========================================= */
+/* TIMELINE Y ESTADOS (TWEETS) - ESTRUCTURA MEJORADA */
+/* ========================================= */
+
+/* 🔄 Estructura principal del Post (Usa Flexbox) */
+.estado-post {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    margin-bottom: 0; /* Remueve margin-bottom, usa solo border-bottom */
+    border-radius: 0;
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-light);
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+.estado-post:hover {
+    background-color: #fafafa;
+}
+
+/* 🖼️ Placeholder para Avatar */
+.post-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    background-color: #ddd;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* 📝 Contenido del Post (Parte principal) */
+.post-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 🔝 Encabezado del Post (Alineación con space-between) */
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 5px;
+    width: 100%;
+}
+
+.post-header strong {
+    font-weight: 700;
+    color: var(--color-dark);
+    margin-right: 5px;
+}
+
+.post-header .handle-and-time {
+    color: var(--color-text-secondary);
+    font-size: 0.85em;
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+/* 💬 Texto del Estado */
+.post-text {
+    line-height: 1.4;
+    word-break: break-word;
+    margin-bottom: 10px;
+}
+
+/* 📊 Barra de Acciones */
+.post-action-bar {
+    display: flex;
+    justify-content: space-between;
+    padding-right: 30%;
+    font-size: 0.9em;
+}
+
+.action-icon {
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: 5px;
+}
+
+.action-icon:hover {
+    color: var(--color-primary);
+}
+
+
+/* PESTAÑAS DEL FEED (Para ti / Siguiendo) */
+.feed-tabs-container {
+    display: flex;
+    justify-content: space-around;
+    /* Mantenemos el borde del contenedor para la línea de base */
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 15px;
+}
+
+.feed-tab {
+    background: none;
+    border: none;
+    padding: 15px 0;
+    flex-grow: 1;
+    cursor: pointer;
+    font-size: 1.05em;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    border-bottom: 3px solid transparent;
+    transition: color 0.2s, border-bottom 0.2s;
+     /* Centramos el texto de la pestaña */
+     text-align: center;
+}
+
+/* CLASE ACTIVA: Borde azul sólido (sin la curva) */
+.feed-tab.active {
+    color: var(--color-dark);
+    border-bottom: 3px solid var(--color-primary);
+    padding-bottom: 15px;
+    /* !------ ESTO ES LO QUE ARREGLA LA CURVA DEL BORDE ------! */
+    border-radius: 0; 
+}
+
+/* ========================================= */
+/* VISTAS SECUNDARIAS (NOTIFICACIONES, MENSAJES) */
+/* ========================================= */
+
+.noti-item,
+.dm-item {
+    padding: 15px;
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-light);
+    margin-bottom: 1px;
+    cursor: pointer;
+}
+
+.dm-item strong {
+    color: var(--color-primary);
 }
