@@ -3,13 +3,14 @@ import { mostrarRegistro } from './registro.js';
 import { mostrarLogin } from './login.js';
 import { mostrarMVP } from './mvp.js';
 import { mostrarUser } from './user.js';
+import { mostrarAdmin } from './admin.js';
 
 const routes = {
-  'registro': mostrarRegistro,
-  'login': mostrarLogin,
-  'actividades': mostrarMVP,
-  'usuarios': mostrarUser
-  // ❌ Se eliminó 'admin': mostrarAdmin
+  registro: mostrarRegistro,
+  login: mostrarLogin,
+  actividades: mostrarMVP,
+  usuarios: mostrarUser,
+  admin: mostrarAdmin
 };
 
 async function CerrarSesion() {
@@ -40,6 +41,12 @@ export async function cargarMenu() {
         <button class="nav-item" data-action="comunidades">🧭</button>
         <button class="nav-item" data-action="notificaciones">🔔</button>
         <button class="nav-item" data-action="mensajes">✉️</button>
+
+        ${user.email === "juan.rodriguezr@uniagustiniana.edu.co" ? `
+
+          <button class="nav-item" data-action="admin">👑</button>
+        ` : ''}
+
         <button class="nav-item" data-action="logout">🚪</button>
       </nav>
 
@@ -50,7 +57,6 @@ export async function cargarMenu() {
   menu.querySelectorAll("[data-action]").forEach(btn => {
     const action = btn.dataset.action;
 
-    // LOGOUT
     if (action === "logout") {
       btn.addEventListener("click", e => {
         e.preventDefault();
@@ -59,7 +65,6 @@ export async function cargarMenu() {
       return;
     }
 
-    // RUTAS PRINCIPALES
     if (routes[action]) {
       btn.addEventListener("click", e => {
         e.preventDefault();
@@ -68,7 +73,6 @@ export async function cargarMenu() {
       return;
     }
 
-    // VISTAS SECUNDARIAS
     btn.addEventListener("click", e => {
       e.preventDefault();
       cargarVista(action);
